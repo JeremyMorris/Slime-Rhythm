@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Slime_Rhythm
+namespace SlimeRhythm
 {
 #if WINDOWS || LINUX
     /// <summary>
