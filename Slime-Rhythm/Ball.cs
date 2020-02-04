@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SlimeRhythm
 {
+    // Ball object
     public class Ball
     {
         protected AnimationManager _animationManager;

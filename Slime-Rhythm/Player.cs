@@ -8,10 +8,11 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SlimeRhythm
 {
+    // Object for the player character
     public class Player
     {
-        private int _maxSpeed = 1;
-        private float _acceleration = 0.03f;
+        private float _maxSpeed = 0.8f;
+        private float _acceleration = 0.04f;
         private Rectangle _playerRectangle;
         protected AnimationManager _animationManager;
         protected Dictionary<string, Animation> _animations;
@@ -24,7 +25,7 @@ namespace SlimeRhythm
 
         public float Speed { get; set; }
 
-        public int MaxSpeed { get { return _maxSpeed; } }
+        public float MaxSpeed { get { return _maxSpeed; } }
 
         public bool FacingRight { get; set; }
 
@@ -67,11 +68,13 @@ namespace SlimeRhythm
             this.Y = y;
         }
 
+        // Draw the player
         public void Draw(SpriteBatch spriteBatch)
         {
             _animationManager.Draw(spriteBatch, PlayerRectangle);
         }
 
+        // Change the currently playing animation based on the player's state
         public void UpdateAnimation(GameTime gameTime)
         {
             _animationManager.Update(gameTime);

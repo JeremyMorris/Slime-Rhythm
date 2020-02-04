@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SlimeRhythm
 {
+    // Object to hold animation information
     // Made referencing tutorial: https://www.youtube.com/watch?v=OLsiWxgONeM
     public class Animation
     {

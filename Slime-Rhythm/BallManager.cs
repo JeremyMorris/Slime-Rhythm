@@ -10,6 +10,7 @@ using System.Timers;
 
 namespace SlimeRhythm
 {
+    // Manager that handles the creation and upkeep of balls on rhythm 
     // ball manager created with assistance from Stack Overflow post https://stackoverflow.com/questions/22721875/xna-need-help-spawning-enemies-on-any-side-on-a-timer-tick-then-maving-them-m
     public class BallManager
     {
@@ -43,6 +44,7 @@ namespace SlimeRhythm
             _ballTimer.Elapsed += HandleBeat;
         }
 
+        // Begin game sequence
         public void Begin(Song song)
         {
             // adjust volume and play song
@@ -52,59 +54,64 @@ namespace SlimeRhythm
             HandleBeat(this, new EventArgs());
         }
 
+        // Stop game sequence
         public void Stop()
         {
             _ballTimer.Stop();
         }
 
+        // Control ball and game events based on music 8th notes
         public void HandleBeat (object sender, EventArgs e)
         {
             _timerCount++;
             _beatCounter++;
 
-            if ((_timerCount - 1) % barLength == 0 && _timerCount != 1)
+            if ((_timerCount - 1) % barLength == 0 && _timerCount != 1) // Increase game difficulty when a new section is reached
             {
                 IncreaseDifficulty();
             }
 
-            if (_timerCount - 1 >= 250)
+            if (_timerCount - 1 >= 250) // Trigger the End of Music sequence if the game is completed
             {
                 EndOfMusic();
             }
 
-            if (_beatCounter >= _spawnInterval) { 
+            if (_beatCounter >= _spawnInterval) { // If the current beat is a spawn beat, add balls
                 AddBall();
                 _beatCounter = 0;
             }
         }
 
+        // Increase the difficulty of the game
         public void IncreaseDifficulty()
         {
             _difficulty++;
 
-            if (_difficulty == 2)
+            if (_difficulty == 2) // Change spawn rate to quarter notes
             {
                 _spawnInterval = 2;
             }
-            else if (_difficulty == 3)
+            else if (_difficulty == 3) // Increase the number of balls spawned per tick
             {
                 _numBallsPerTick = 2;
             }
-            else if (_difficulty == 4)
+            else if (_difficulty == 4) // change spawn rate to 8th notes
             {
                 _spawnInterval = 1;
                 //_numBallsPerTick = 3;
             }
         }
 
+        // Game completion sequence
         public void EndOfMusic()
         {
             _numBallsPerTick = 0;
         }
 
+        // Spawn balls at the top of the screen
         public void AddBall()
         {
-            for (int i = 0; i < _numBallsPerTick; i++)
+            for (int i = 0; i < _numBallsPerTick; i++) // Add _numBallsPerTick balls
             {
                 Vector2 ballPosition = new Vector2(_random.Next(0, 8) * 100, 0);
 
@@ -113,7 +120,8 @@ namespace SlimeRhythm
             }
         }
 
-        public void Update(GameTime gameTime)
+        // Handle the updating for each ball
+        public void Update()
         {
             List<Ball> removeList = new List<Ball>();
 
@@ -121,27 +129,36 @@ namespace SlimeRhythm
             {
                 ball.SetY(ball.Y + ball.Speed); // update ball Y coordinate
                 
-                if (ball.Y > _screenHeight - 50)
+                if (ball.Y > _screenHeight - 50) // detect ground collision
                 {
                     ball.GroundCollision = true;
                 }
 
-                if (ball.Y > _screenHeight - 25) // remove ball after ground collision
+                if (ball.Y > _screenHeight - 25) // remove ball shortly after ground collision
                 {
                     removeList.Add(ball);
                 }
 
             }
 
-            _ballList = _ballList.Except(removeList).ToList();
+            try
+            {
+                _ballList = _ballList.Except(removeList).ToList();  // remove flagged balls
+            }
+            catch
+            {
+
+            }
         }
 
+        // Detect collision between balls and player
         public bool TestForPlayerCollision(Rectangle playerRectangle)
         {
-            foreach (Ball ball in _ballList)
+            try
             {
-                try
+                foreach (Ball ball in _ballList) // iterate through balls
                 {
+                    // detect collision with player
                     float nearestX = Clamp(ball.Center.X, playerRectangle.X + 10, playerRectangle.X + 80);
                     float nearestY = Clamp(ball.Center.Y, playerRectangle.Y + 30, playerRectangle.Y + 100);
                     if (Math.Pow(20, 2) > (Math.Pow(ball.Center.X - nearestX, 2) + Math.Pow(ball.Center.Y - nearestY, 2)))
@@ -150,14 +167,15 @@ namespace SlimeRhythm
                         return true;
                     }
                 }
-                catch
-                {
+            }
+            catch
+            {
 
-                }
             }
             return false;
         }
 
+        // Clamp function
         public float Clamp(float point, float min, float max)
         {
             if (point < min) return min;
@@ -165,33 +183,35 @@ namespace SlimeRhythm
             else return point;
         }
 
+        // Call each active ball's UpdateAnimation method
         public void UpdateAnimations(GameTime gameTime)
         {
-            foreach (Ball ball in _ballList)
+            try
             {
-                try
+                foreach (Ball ball in _ballList)
                 {
                     ball.UpdateAnimation(gameTime);
                 }
-                catch
-                {
+            }
+            catch
+            {
 
-                }
             }
         }
 
+        // Draw each active ball
         public void Draw(SpriteBatch spriteBatch)
         {
-            foreach (Ball ball in _ballList)
+            try
             {
-                try
+                foreach (Ball ball in _ballList)
                 {
                     ball.Draw(spriteBatch);
                 }
-                catch
-                {
+            }
+            catch
+            {
 
-                }
             }
         }
     }

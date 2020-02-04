@@ -41,12 +41,11 @@ namespace SlimeRhythm
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             graphics.PreferredBackBufferWidth = 800;
             graphics.PreferredBackBufferHeight = 700;
             graphics.ApplyChanges();
 
-            friction = 0.015f;
+            friction = 0.018f;
 
             base.Initialize();
         }
@@ -81,6 +80,7 @@ namespace SlimeRhythm
                 { "Collision", new Animation(Content.Load<Texture2D>("Ball/Ball1-Collision"), 3, false) }
             };
 
+            // correct frame speeds for ball animations
             ballAnimations["Falling"].FrameSpeed = 625f;
             ballAnimations["Collision"].FrameSpeed = 20f;
 
@@ -122,24 +122,24 @@ namespace SlimeRhythm
                 Exit();
 
             // player movement
-            if (player.FatalCollision == false)
+            if (player.FatalCollision == false) // if the player has not died
             {
-                if (newKeyboardState.IsKeyDown(Keys.Right))
-                { // move right
-                    player.Speed += player.Acceleration;
+                if (newKeyboardState.IsKeyDown(Keys.Right)) // move right
+                { 
+                    player.Speed += player.Acceleration; // increase player's speed based on acceleration
 
-                    if (player.Speed > player.MaxSpeed) player.Speed = player.MaxSpeed;
+                    if (player.Speed > player.MaxSpeed) player.Speed = player.MaxSpeed; // cap speed to player's max
 
-                    player.FacingRight = true;
+                    player.FacingRight = true; // make the player face right
                 }
 
                 if (newKeyboardState.IsKeyDown(Keys.Left)) // move left
                 {
-                    player.Speed -= player.Acceleration;
+                    player.Speed -= player.Acceleration; // decrease player's speed based on acceleration
 
-                    if (player.Speed < 0 - player.MaxSpeed) player.Speed = 0 - player.MaxSpeed;
+                    if (player.Speed < 0 - player.MaxSpeed) player.Speed = 0 - player.MaxSpeed; // cap speed to player's max
 
-                    player.FacingRight = false;
+                    player.FacingRight = false; // make the player face left
                 }
             }
 
@@ -147,15 +147,15 @@ namespace SlimeRhythm
             if (player.X < 0) // left side
             {
                 player.X = 0;
-                player.Speed *= -0.3f;
+                player.Speed *= -0.3f;  // bounce off the wall, retaining some speed
             }
             if (player.X > GraphicsDevice.Viewport.Width - player.PlayerRectangle.Width) // right side
             {
                 player.X = GraphicsDevice.Viewport.Width - player.PlayerRectangle.Width;
-                player.Speed *= -0.3f;
+                player.Speed *= -0.3f;  // bounce off the wall, retaining some speed
             }
 
-            // reduce speed based on friction if key is not held
+            // reduce speed based on friction if a movement key is not held
             if (!newKeyboardState.IsKeyDown(Keys.Right) && !newKeyboardState.IsKeyDown(Keys.Left))
             {
                 if (player.Speed > 0)
@@ -170,12 +170,12 @@ namespace SlimeRhythm
                 }
             }
 
+            // update balls
+            ballManager.Update();
+
             // move player
             player.X += player.Speed * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             player.SetX((int)player.X);
-
-            // update balls
-            ballManager.Update(gameTime);
 
             // test for collision with player and ball
             if (ballManager.TestForPlayerCollision(player.PlayerRectangle))
