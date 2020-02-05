@@ -28,6 +28,8 @@ namespace SlimeRhythm
         private int _beatCounter;
         private int _spawnInterval;
 
+        public bool MusicCompleted { get; set; }
+
         public BallManager(Dictionary<string, Animation> animations, Random r, int screenHeight)
         {
             _ballAnimations = animations;
@@ -38,6 +40,7 @@ namespace SlimeRhythm
             _difficulty = 1;
             _beatCounter = 1;
             _spawnInterval = 4;
+            MusicCompleted = false;
 
             // Create 96 BPM timer to align with music
             _ballTimer = new Timer(312/*625*/);
@@ -48,7 +51,7 @@ namespace SlimeRhythm
         public void Begin(Song song)
         {
             // adjust volume and play song
-            MediaPlayer.Volume = 0.5f;
+            MediaPlayer.Volume = /*0.5f;*/0.1f;
             MediaPlayer.Play(song);
             _ballTimer.Start();
             HandleBeat(this, new EventArgs());
@@ -71,7 +74,7 @@ namespace SlimeRhythm
                 IncreaseDifficulty();
             }
 
-            if (_timerCount - 1 >= 250) // Trigger the End of Music sequence if the game is completed
+            if (_timerCount >= 250) // Trigger the End of Music sequence if the game is completed
             {
                 EndOfMusic();
             }
@@ -121,13 +124,15 @@ namespace SlimeRhythm
         }
 
         // Handle the updating for each ball
-        public void Update()
+        public void Update(GameTime gameTime)
         {
             List<Ball> removeList = new List<Ball>();
 
+            if (gameTime.TotalGameTime.TotalSeconds >= 80) MusicCompleted = true;
+
             foreach (Ball ball in _ballList)
             {
-                ball.SetY(ball.Y + ball.Speed); // update ball Y coordinate
+                ball.SetY(ball.Y + (ball.Speed * (float)(gameTime.ElapsedGameTime.TotalMilliseconds / 20))); // update ball Y coordinate
                 
                 if (ball.Y > _screenHeight - 50) // detect ground collision
                 {
@@ -161,7 +166,7 @@ namespace SlimeRhythm
                     // detect collision with player
                     float nearestX = Clamp(ball.Center.X, playerRectangle.X + 10, playerRectangle.X + 80);
                     float nearestY = Clamp(ball.Center.Y, playerRectangle.Y + 30, playerRectangle.Y + 100);
-                    if (Math.Pow(20, 2) > (Math.Pow(ball.Center.X - nearestX, 2) + Math.Pow(ball.Center.Y - nearestY, 2)))
+                    if (Math.Pow(16, 2) > (Math.Pow(ball.Center.X - nearestX, 2) + Math.Pow(ball.Center.Y - nearestY, 2)))
                     {
                         ball.PlayerCollision = true;
                         return true;

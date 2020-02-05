@@ -17,11 +17,16 @@ namespace SlimeRhythm
         Random random = new Random();
 
         Texture2D background;
+        Texture2D victory;
+        Texture2D loss;
+        Texture2D progressBar;
 
         Song song;
         Player player;
         BallManager ballManager;
 
+        bool gameWon;
+        bool gameLost;
         float friction;
 
         KeyboardState oldKeyboardState;
@@ -46,6 +51,8 @@ namespace SlimeRhythm
             graphics.ApplyChanges();
 
             friction = 0.018f;
+            gameLost = false;
+            gameWon = false;
 
             base.Initialize();
         }
@@ -61,6 +68,13 @@ namespace SlimeRhythm
 
             // Load background
             background = Content.Load<Texture2D>("Game1-Background2");
+
+            // Load victory and loss text
+            victory = Content.Load<Texture2D>("Victory");
+            loss = Content.Load<Texture2D>("Loss");
+
+            // Load progress bar
+            progressBar = Content.Load<Texture2D>("ProgressBar");
 
             // Load player animations
             var playerAnimations = new Dictionary<string, Animation>()
@@ -171,7 +185,7 @@ namespace SlimeRhythm
             }
 
             // update balls
-            ballManager.Update();
+            ballManager.Update(gameTime);
 
             // move player
             player.X += player.Speed * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -181,8 +195,12 @@ namespace SlimeRhythm
             if (ballManager.TestForPlayerCollision(player.PlayerRectangle))
             {
                 player.FatalCollision = true;
+                gameLost = true;
                 ballManager.Stop();
             }
+
+            // test for victory
+            if (ballManager.MusicCompleted && !player.FatalCollision) gameWon = true;
 
             // fade out music if the player is dead
             if (player.FatalCollision)
@@ -211,6 +229,17 @@ namespace SlimeRhythm
 
             // draw background
             spriteBatch.Draw(background, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), Color.White);
+
+            // draw progress bar
+            if (!gameLost)
+            {
+                spriteBatch.Draw(progressBar, new Rectangle(0, 0, (int)((gameTime.TotalGameTime.TotalSeconds / 80) * GraphicsDevice.Viewport.Width),
+                                                        GraphicsDevice.Viewport.Height), Color.White * 0.3f);
+            }
+
+            // draw loss or victory text
+            if (gameLost) spriteBatch.Draw(loss, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), Color.White);
+            if (gameWon) spriteBatch.Draw(victory, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), Color.White);
 
             // draw player
             player.Draw(spriteBatch);

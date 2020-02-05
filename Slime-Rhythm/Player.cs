@@ -11,7 +11,7 @@ namespace SlimeRhythm
     // Object for the player character
     public class Player
     {
-        private float _maxSpeed = 0.8f;
+        private float _maxSpeed = 0.6f;
         private float _acceleration = 0.04f;
         private Rectangle _playerRectangle;
         protected AnimationManager _animationManager;
