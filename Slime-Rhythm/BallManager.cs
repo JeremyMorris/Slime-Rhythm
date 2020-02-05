@@ -51,7 +51,7 @@ namespace SlimeRhythm
         public void Begin(Song song)
         {
             // adjust volume and play song
-            MediaPlayer.Volume = /*0.5f;*/0.1f;
+            MediaPlayer.Volume = 0.5f;
             MediaPlayer.Play(song);
             _ballTimer.Start();
             HandleBeat(this, new EventArgs());
