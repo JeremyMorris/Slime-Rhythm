@@ -116,10 +116,23 @@ namespace SlimeRhythm
         {
             for (int i = 0; i < _numBallsPerTick; i++) // Add _numBallsPerTick balls
             {
-                Vector2 ballPosition = new Vector2(_random.Next(0, 8) * 100, 0);
-
-                Ball newBall = new Ball(ballPosition, _ballAnimations);
-                _ballList.Add(newBall);
+                // If at difficulty 4, have a chance to not spawn all balls
+                if (_difficulty >= 4 && i > 0)
+                {
+                    if (_random.Next(0, 10) <= 5)
+                    {
+                        Vector2 ballPosition = new Vector2(_random.Next(0, 8) * 100, 0);
+                        Ball newBall = new Ball(ballPosition, _ballAnimations);
+                        _ballList.Add(newBall);
+                    }
+                }
+                else
+                {
+                    Vector2 ballPosition = new Vector2(_random.Next(0, 8) * 100, 0);
+                    Ball newBall = new Ball(ballPosition, _ballAnimations);
+                    _ballList.Add(newBall);
+                }
+                
             }
         }
 
