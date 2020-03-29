@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using Slime_Rhythm;
 using System;
 using System.Collections.Generic;
 
@@ -20,6 +21,9 @@ namespace SlimeRhythm
         Texture2D victory;
         Texture2D loss;
         Texture2D progressBar;
+        Texture2D progressParticle;
+        ParticleSystem progressParticleSystem;
+        int progressX = 0;
 
         Song song;
         Player player;
@@ -75,6 +79,36 @@ namespace SlimeRhythm
 
             // Load progress bar
             progressBar = Content.Load<Texture2D>("ProgressBar");
+            progressParticle = Content.Load<Texture2D>("Player/Slime-Particle");
+            progressParticleSystem = new ParticleSystem(1000, progressParticle);
+            progressParticleSystem.Emitter = new Vector2(0, 100);
+            progressParticleSystem.SpawnPerFrame = 1;
+            progressParticleSystem.Opacity = 0.2f;
+
+            // Set the SpawnParticle method
+            progressParticleSystem.SpawnParticle = (ref Particle particle) =>
+            {
+
+                particle.Position = new Vector2(progressX, 100);
+                particle.Velocity = new Vector2(
+                    MathHelper.Lerp(0, 0, (float)random.NextDouble()), // X between -50 and 50
+                    MathHelper.Lerp(0, 100, (float)random.NextDouble()) // Y between 0 and 100
+                    );
+                particle.Acceleration = 0.1f * new Vector2(0, (float)-random.NextDouble());
+
+                particle.Color = Color.Gold;
+                particle.Scale = 0.1f;
+                particle.Life = 0.4f;
+            };
+
+            // Set the UpdateParticle method
+            progressParticleSystem.UpdateParticle = (float deltaT, ref Particle particle) =>
+            {
+                particle.Velocity += deltaT * particle.Acceleration;
+                particle.Position += deltaT * particle.Velocity;
+                //particle.Scale -= deltaT * 2;
+                particle.Life -= deltaT;
+            };
 
             // Load player animations
             var playerAnimations = new Dictionary<string, Animation>()
@@ -86,6 +120,7 @@ namespace SlimeRhythm
                 { "DyingRight", new Animation(Content.Load<Texture2D>("Player/KingSlime-DyingRight"), 6, false) },
                 { "DyingLeft", new Animation(Content.Load<Texture2D>("Player/KingSlime-DyingLeft"), 6, false) }
             };
+            var slimeParticle = Content.Load<Texture2D>("Player/Slime-Particle");
 
             // Load ball animations
             var ballAnimations = new Dictionary<string, Animation>()
@@ -93,6 +128,8 @@ namespace SlimeRhythm
                 { "Falling", new Animation(Content.Load<Texture2D>("Ball/Ball1-Falling"), 2) },
                 { "Collision", new Animation(Content.Load<Texture2D>("Ball/Ball1-Collision"), 3, false) }
             };
+            var trailSprite = Content.Load<Texture2D>("Ball/Bomb-Trail");
+            var explosionParticle = Content.Load<Texture2D>("Ball/Explosion-Particle");
 
             // correct frame speeds for ball animations
             ballAnimations["Falling"].FrameSpeed = 625f;
@@ -102,10 +139,10 @@ namespace SlimeRhythm
             song = Content.Load<Song>("Game1Song");
 
             // create player object
-            player = new Player(new Vector2((GraphicsDevice.Viewport.Width / 2) - 50, GraphicsDevice.Viewport.Height - 100), playerAnimations);
+            player = new Player(new Vector2((GraphicsDevice.Viewport.Width / 2) - 50, GraphicsDevice.Viewport.Height - 100), playerAnimations, slimeParticle);
             
             // create ball manager
-            ballManager = new BallManager(ballAnimations, random, GraphicsDevice.Viewport.Height);
+            ballManager = new BallManager(ballAnimations, random, GraphicsDevice.Viewport.Height, trailSprite, explosionParticle);
 
             // begin ball spawning / music sequence
             ballManager.Begin(song);
@@ -191,6 +228,9 @@ namespace SlimeRhythm
             player.X += player.Speed * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             player.SetX((int)player.X);
 
+            // update particles
+            player.UpdateParticles(gameTime);
+
             // test for collision with player and ball
             if (ballManager.TestForPlayerCollision(player.PlayerRectangle))
             {
@@ -198,6 +238,10 @@ namespace SlimeRhythm
                 gameLost = true;
                 ballManager.Stop();
             }
+
+            // progress bar
+            progressX = (int)((gameTime.TotalGameTime.TotalSeconds / 80) * GraphicsDevice.Viewport.Width);
+            progressParticleSystem.Update(gameTime);
 
             // test for victory
             if (ballManager.MusicCompleted && !player.FatalCollision) gameWon = true;
@@ -233,8 +277,9 @@ namespace SlimeRhythm
             // draw progress bar
             if (!gameLost)
             {
-                spriteBatch.Draw(progressBar, new Rectangle(0, 0, (int)((gameTime.TotalGameTime.TotalSeconds / 80) * GraphicsDevice.Viewport.Width),
+                spriteBatch.Draw(progressBar, new Rectangle(0, 0, progressX,
                                                         GraphicsDevice.Viewport.Height), Color.White * 0.3f);
+                progressParticleSystem.Draw(spriteBatch);
             }
 
             // draw loss or victory text

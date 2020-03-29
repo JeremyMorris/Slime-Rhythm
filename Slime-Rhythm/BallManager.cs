@@ -17,6 +17,8 @@ namespace SlimeRhythm
         const int barLength = 64;
 
         protected Dictionary<string, Animation> _ballAnimations;
+        protected Texture2D _trailSprite;
+        protected Texture2D _explosionParticle;
 
         private List<Ball> _ballList = new List<Ball>();
         private Timer _ballTimer;
@@ -30,7 +32,7 @@ namespace SlimeRhythm
 
         public bool MusicCompleted { get; set; }
 
-        public BallManager(Dictionary<string, Animation> animations, Random r, int screenHeight)
+        public BallManager(Dictionary<string, Animation> animations, Random r, int screenHeight, Texture2D trailSprite, Texture2D explosionParticle)
         {
             _ballAnimations = animations;
             _random = r;
@@ -40,6 +42,8 @@ namespace SlimeRhythm
             _difficulty = 1;
             _beatCounter = 1;
             _spawnInterval = 4;
+            _trailSprite = trailSprite;
+            _explosionParticle = explosionParticle;
             MusicCompleted = false;
 
             // Create 96 BPM timer to align with music
@@ -122,14 +126,14 @@ namespace SlimeRhythm
                     if (_random.Next(0, 10) <= 5)
                     {
                         Vector2 ballPosition = new Vector2(_random.Next(0, 8) * 100, 0);
-                        Ball newBall = new Ball(ballPosition, _ballAnimations);
+                        Ball newBall = new Ball(ballPosition, _ballAnimations, _trailSprite, _explosionParticle);
                         _ballList.Add(newBall);
                     }
                 }
                 else
                 {
                     Vector2 ballPosition = new Vector2(_random.Next(0, 8) * 100, 0);
-                    Ball newBall = new Ball(ballPosition, _ballAnimations);
+                    Ball newBall = new Ball(ballPosition, _ballAnimations, _trailSprite, _explosionParticle);
                     _ballList.Add(newBall);
                 }
                 
@@ -146,13 +150,15 @@ namespace SlimeRhythm
             foreach (Ball ball in _ballList)
             {
                 ball.SetY(ball.Y + (ball.Speed * (float)(gameTime.ElapsedGameTime.TotalMilliseconds / 20))); // update ball Y coordinate
-                
+
+                ball.UpdateParticles(gameTime);
+
                 if (ball.Y > _screenHeight - 50) // detect ground collision
                 {
                     ball.GroundCollision = true;
                 }
 
-                if (ball.Y > _screenHeight - 25) // remove ball shortly after ground collision
+                if (ball.Y > _screenHeight - 0) // remove ball shortly after ground collision
                 {
                     removeList.Add(ball);
                 }

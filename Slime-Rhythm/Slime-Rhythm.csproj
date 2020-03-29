@@ -45,7 +45,9 @@
     <Compile Include="AnimationManager.cs" />
     <Compile Include="Ball.cs" />
     <Compile Include="BallManager.cs" />
+    <Compile Include="Particle.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="ParticleSystem.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

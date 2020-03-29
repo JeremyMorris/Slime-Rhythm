@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Slime_Rhythm;
 
 namespace SlimeRhythm
 {
@@ -14,6 +15,10 @@ namespace SlimeRhythm
         protected AnimationManager _animationManager;
         protected Dictionary<string, Animation> _animations;
         private Rectangle _ballRectangle;
+        protected ParticleSystem _trailParticleSystem;
+        protected ParticleSystem _explosionParticleSystem;
+
+        Random random = new Random();
 
         public Vector2 Center { get; set; }
 
@@ -25,7 +30,7 @@ namespace SlimeRhythm
 
         public bool GroundCollision { get; set; }
 
-        public Ball(Vector2 ballOrigin, Dictionary<string, Animation> animations)
+        public Ball(Vector2 ballOrigin, Dictionary<string, Animation> animations, Texture2D trailSprite, Texture2D explosionParticle)
         {
             PlayerCollision = false;
             GroundCollision = false;
@@ -38,6 +43,68 @@ namespace SlimeRhythm
 
             _animations = animations;
             _animationManager = new AnimationManager(_animations.First().Value);
+
+            _trailParticleSystem = new ParticleSystem(100, trailSprite);
+            _trailParticleSystem.Emitter = new Vector2(Center.X, Center.Y);
+            _trailParticleSystem.SpawnPerFrame = 4;
+            _trailParticleSystem.Opacity = 0.08f;
+
+            // Set the SpawnParticle method
+            _trailParticleSystem.SpawnParticle = (ref Particle particle) =>
+            {
+
+                particle.Position = new Vector2(Center.X - 11, Center.Y - 50);
+                particle.Velocity = new Vector2(
+                    MathHelper.Lerp(0, 0, (float)random.NextDouble()), // X between -50 and 50
+                    MathHelper.Lerp(0, 100, (float)random.NextDouble()) // Y between 0 and 100
+                    );
+                particle.Acceleration = 0.1f * new Vector2(0, (float)-random.NextDouble());
+                
+                particle.Color = Color.White;
+                particle.Scale = 0.8f;
+                particle.Life = 0.3f;
+            };
+
+            // Set the UpdateParticle method
+            _trailParticleSystem.UpdateParticle = (float deltaT, ref Particle particle) =>
+            {
+                particle.Velocity += deltaT * particle.Acceleration;
+                particle.Position += deltaT * particle.Velocity;
+                particle.Position += new Vector2(0.5f, 0);
+                particle.Scale -= deltaT * 2;
+                particle.Life -= deltaT;
+            };
+
+            _explosionParticleSystem = new ParticleSystem(100, explosionParticle);
+            _explosionParticleSystem.Emitter = new Vector2(Center.X, Center.Y);
+            _explosionParticleSystem.SpawnPerFrame = 8;
+            _explosionParticleSystem.Opacity = 0.3f;
+
+            // Set the SpawnParticle method
+            _explosionParticleSystem.SpawnParticle = (ref Particle particle) =>
+            {
+
+                particle.Position = new Vector2(Center.X - 11, Center.Y - 50);
+                particle.Velocity = new Vector2(
+                    MathHelper.Lerp(-300, 300, (float)random.NextDouble()), // X between -50 and 50
+                    MathHelper.Lerp(-100, 100, (float)random.NextDouble()) // Y between 0 and 100
+                    );
+                particle.Acceleration = 0.1f * new Vector2(0, (float)-random.NextDouble());
+
+                particle.Color = Color.White;
+                particle.Scale = 0.8f;
+                particle.Life = 0.3f;
+            };
+
+            // Set the UpdateParticle method
+            _explosionParticleSystem.UpdateParticle = (float deltaT, ref Particle particle) =>
+            {
+                particle.Velocity += deltaT * particle.Acceleration;
+                particle.Position += deltaT * particle.Velocity;
+                particle.Position += new Vector2(0.5f, 0);
+                particle.Scale -= deltaT * 5;
+                particle.Life -= deltaT;
+            };
         }
 
         public void SetY(float y)
@@ -47,8 +114,16 @@ namespace SlimeRhythm
             _ballRectangle.Y = (int)y;
         }
 
+        public void UpdateParticles(GameTime gameTime)
+        {
+            _trailParticleSystem.Update(gameTime);
+            if (PlayerCollision || GroundCollision) _explosionParticleSystem.Update(gameTime);
+        }
+
         public void Draw(SpriteBatch spriteBatch)
         {
+            _trailParticleSystem.Draw(spriteBatch);
+            if (PlayerCollision || GroundCollision) _explosionParticleSystem.Draw(spriteBatch);
             _animationManager.Draw(spriteBatch, _ballRectangle);
         }
 
